@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Boxes,
+  Building2,
   ClipboardCheck,
   Package,
   PencilLine,
@@ -11,7 +12,7 @@ import {
   Sparkles,
   WalletCards,
 } from "lucide-react";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,7 +28,7 @@ import {
   updateMaterial,
 } from "@/api/materials";
 import { fetchProjects } from "@/api/projects";
-import type { Material } from "@/api/types";
+import type { Company, Material } from "@/api/types";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { ErrorState } from "@/components/feedback/error-state";
 import { PageSkeleton } from "@/components/feedback/skeleton";
@@ -144,13 +145,16 @@ export default function MaterialsPage() {
     defaultValues: buildMaterialFormDefaults(),
   });
 
-  const materials = materialsQuery.data ?? EMPTY_LIST;
+  const materials = Array.isArray(materialsQuery.data) ? materialsQuery.data : EMPTY_LIST;
   const tableMaterials = materialsTableQuery.data?.items ?? EMPTY_LIST;
   const tableMaterialTotal = materialsTableQuery.data?.total ?? 0;
-  const summary = summaryQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const companies = companiesQuery.data ?? EMPTY_LIST;
-  const companyMap = useMemo(() => new Map(companies.map((company) => [company.id, company.name])), [companies]);
+  const summary = Array.isArray(summaryQuery.data) ? summaryQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const companies = Array.isArray(companiesQuery.data) ? companiesQuery.data : EMPTY_LIST;
+  const companyMap = useMemo(
+    () => new Map<number, Company>(companies.map((company) => [company.id, company])),
+    [companies],
+  );
   const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project])), [projects]);
 
   const selectedMaterial = useMemo(
@@ -158,8 +162,12 @@ export default function MaterialsPage() {
     [editingMaterialId, materials],
   );
 
-  useEffect(() => {
+  const resetTablePage = useEffectEvent(() => {
     setTablePage(1);
+  });
+
+  useEffect(() => {
+    resetTablePage();
   }, [attentionFilter, categoryFilter, deferredSearch]);
 
   useEffect(() => {
@@ -277,7 +285,14 @@ export default function MaterialsPage() {
         exportValue: (row) => {
           const project = row.project_id ? projectMap.get(row.project_id) : null;
           const company = row.company_id ? companyMap.get(row.company_id) : null;
-          return `${project?.name ?? "-"} / ${company ?? "-"}`;
+          return [
+            project?.name ?? "No project link",
+            company?.name ?? "No company link",
+            company?.gst_number ? `GST ${company.gst_number}` : null,
+            company?.phone ?? company?.email ?? null,
+          ]
+            .filter(Boolean)
+            .join(" | ");
         },
         cell: (row) => {
           const project = row.project_id ? projectMap.get(row.project_id) : null;
@@ -285,7 +300,14 @@ export default function MaterialsPage() {
           return (
             <div className="space-y-1 text-sm">
               <p>{project?.name ?? "No project link"}</p>
-              <p className="text-[var(--surface-faint)]">{company ?? "No company link"}</p>
+              <p className="font-semibold text-[var(--surface-ink)]">
+                {company?.name ?? "No company link"}
+              </p>
+              <p className="text-[var(--surface-faint)]">
+                {company?.gst_number
+                  ? `GST ${company.gst_number}`
+                  : company?.phone ?? company?.email ?? "Company details not captured"}
+              </p>
             </div>
           );
         },
@@ -395,6 +417,10 @@ export default function MaterialsPage() {
               <Link className={buttonVariants({ variant: "secondary" })} to="/materials/requisitions">
                 <ClipboardCheck className="size-4" />
                 Open requisitions
+              </Link>
+              <Link className={buttonVariants({ variant: "secondary" })} to="/companies">
+                <Building2 className="size-4" />
+                Open companies
               </Link>
               <Button
                 disabled={!canCreate}
@@ -507,6 +533,7 @@ export default function MaterialsPage() {
                   ) : (
                     lowStockMaterials.map((material) => {
                       const attention = getMaterialAttention(material);
+                      const company = material.company_id ? companyMap.get(material.company_id) : null;
                       return (
                         <div key={material.id} className="rounded-[var(--radius)] border border-[color:var(--line)] bg-white/75 p-4">
                           <div className="flex items-start justify-between gap-4">
@@ -519,6 +546,8 @@ export default function MaterialsPage() {
                           <div className="mt-3 grid gap-2 text-sm text-[var(--surface-muted)] md:grid-cols-2">
                             <p>Stock: <span className="font-semibold text-[var(--surface-ink)]">{formatDecimal(material.current_stock)} {material.unit}</span></p>
                             <p>Reorder: <span className="font-semibold text-[var(--surface-ink)]">{formatDecimal(material.reorder_level)} {material.unit}</span></p>
+                            <p>Company: <span className="font-semibold text-[var(--surface-ink)]">{company?.name ?? "No company link"}</span></p>
+                            <p>GST / Contact: <span className="font-semibold text-[var(--surface-ink)]">{company?.gst_number ?? company?.phone ?? company?.email ?? "Not captured"}</span></p>
                           </div>
                         </div>
                       );
@@ -533,18 +562,50 @@ export default function MaterialsPage() {
                     key={`${scope.scope_type}-${scope.scope_id ?? "all"}`}
                     className="rounded-[var(--radius)] border border-[color:var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-lg)]"
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--surface-faint)]">
-                          {titleCase(scope.scope_type)} scope
-                        </p>
-                        <h3 className="mt-2 text-2xl text-[var(--surface-ink)]">{scope.scope_name ?? "Global stock"}</h3>
-                      </div>
-                      <Badge tone="accent">{scope.material_count} items</Badge>
-                    </div>
-                    <p className="mt-4 text-sm leading-6 text-[var(--surface-muted)]">
-                      Combined stock: <span className="font-semibold text-[var(--surface-ink)]">{formatDecimal(scope.total_stock)}</span>
-                    </p>
+                    {(() => {
+                      const company =
+                        scope.scope_type === "company" && scope.scope_id
+                          ? companyMap.get(scope.scope_id)
+                          : null;
+                      return (
+                        <>
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--surface-faint)]">
+                                {titleCase(scope.scope_type)} scope
+                              </p>
+                              <h3 className="mt-2 text-2xl text-[var(--surface-ink)]">{scope.scope_name ?? "Global stock"}</h3>
+                            </div>
+                            <Badge tone="accent">{scope.material_count} items</Badge>
+                          </div>
+                          <p className="mt-4 text-sm leading-6 text-[var(--surface-muted)]">
+                            Combined stock: <span className="font-semibold text-[var(--surface-ink)]">{formatDecimal(scope.total_stock)}</span>
+                          </p>
+                          {company ? (
+                            <div className="mt-4 grid gap-2 text-sm text-[var(--surface-muted)]">
+                              <p>
+                                GST / PAN:{" "}
+                                <span className="font-semibold text-[var(--surface-ink)]">
+                                  {company.gst_number ?? company.pan_number ?? "Not captured"}
+                                </span>
+                              </p>
+                              <p>
+                                Phone / Email:{" "}
+                                <span className="font-semibold text-[var(--surface-ink)]">
+                                  {company.phone ?? company.email ?? "Not captured"}
+                                </span>
+                              </p>
+                              <p>
+                                Address:{" "}
+                                <span className="font-semibold text-[var(--surface-ink)]">
+                                  {company.address ?? "Not captured"}
+                                </span>
+                              </p>
+                            </div>
+                          ) : null}
+                        </>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

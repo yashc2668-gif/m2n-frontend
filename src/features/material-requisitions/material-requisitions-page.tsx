@@ -100,9 +100,9 @@ export default function MaterialRequisitionsPage() {
     name: "items",
   });
 
-  const requisitions = requisitionsQuery.data ?? EMPTY_LIST;
-  const materials = materialsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
+  const requisitions = Array.isArray(requisitionsQuery.data) ? requisitionsQuery.data : EMPTY_LIST;
+  const materials = Array.isArray(materialsQuery.data) ? materialsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
   const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
   const materialMap = useMemo(() => new Map(materials.map((material) => [material.id, material])), [materials]);
 

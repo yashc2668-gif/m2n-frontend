@@ -1,15 +1,26 @@
 import { apiDownload, apiFetch, apiFetchList, apiFetchListPage, type ListPageParams } from '@/api/client';
-import type { Document, DocumentCreateInput, DocumentUpdateInput } from '@/api/types';
+import type {
+  Document,
+  DocumentCreateInput,
+  DocumentEntityType,
+  DocumentUpdateInput,
+} from '@/api/types';
 
 export interface DocumentListParams extends ListPageParams {
-  entity_type?: string;
+  entity_type?: DocumentEntityType;
   entity_id?: number;
+  document_type?: string;
   search?: string;
 }
 
 export function fetchDocuments(
   token: string,
-  filters?: { entity_type?: string; entity_id?: number },
+  filters?: {
+    entity_type?: DocumentEntityType;
+    entity_id?: number;
+    document_type?: string;
+    search?: string;
+  },
 ) {
   return apiFetchList<Document>('/documents/', {
     token,
@@ -54,6 +65,10 @@ export function updateDocument(token: string, documentId: number, payload: Docum
 
 export function getDocumentDownloadUrl(documentId: number) {
   return `/documents/${documentId}/download`;
+}
+
+export function downloadDocument(token: string, documentId: number) {
+  return apiDownload(getDocumentDownloadUrl(documentId), { token });
 }
 
 export function exportDocuments(token: string, params: DocumentListParams = {}) {

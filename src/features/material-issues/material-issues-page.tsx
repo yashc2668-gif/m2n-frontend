@@ -77,9 +77,9 @@ export default function MaterialIssuesPage() {
     enabled: Boolean(accessToken),
   });
 
-  const issues = issuesQuery.data ?? EMPTY_LIST;
-  const materials = materialsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
+  const issues = Array.isArray(issuesQuery.data) ? issuesQuery.data : EMPTY_LIST;
+  const materials = Array.isArray(materialsQuery.data) ? materialsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
   const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
   const materialMap = useMemo(() => new Map(materials.map((material) => [material.id, material])), [materials]);
   const selectedIssue = useMemo(() => issues.find((issue) => issue.id === selectedIssueId) ?? null, [issues, selectedIssueId]);

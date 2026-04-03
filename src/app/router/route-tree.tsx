@@ -106,6 +106,14 @@ const reportContractDrilldownRoute = createRoute({
   ),
 });
 
+const companiesRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/companies",
+  component: lazyRouteComponent(
+    () => import("@/features/companies/companies-page"),
+  ),
+});
+
 const projectsRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/projects",
@@ -127,6 +135,14 @@ const vendorsRoute = createRoute({
   path: "/vendors",
   component: lazyRouteComponent(
     () => import("@/features/vendors/vendors-page"),
+  ),
+});
+
+const quotationsRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/quotations",
+  component: lazyRouteComponent(
+    () => import("@/features/quotations/quotations-page"),
   ),
 });
 
@@ -184,6 +200,14 @@ const labourRoute = createRoute({
   component: lazyRouteComponent(() => import("@/features/labour/labour-page")),
 });
 
+const labourContractorsRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/labour/contractors",
+  component: lazyRouteComponent(
+    () => import("@/features/labour-contractors/labour-contractors-page"),
+  ),
+});
+
 const labourAttendanceRoute = createRoute({
   getParentRoute: () => appLayoutRoute,
   path: "/labour/attendance",
@@ -221,6 +245,14 @@ const paymentsRoute = createRoute({
   path: "/payments",
   component: lazyRouteComponent(
     () => import("@/features/payments/payments-page"),
+  ),
+});
+
+const siteExpensesRoute = createRoute({
+  getParentRoute: () => appLayoutRoute,
+  path: "/site-expenses",
+  component: lazyRouteComponent(
+    () => import("@/features/site-expenses/site-expenses-page"),
   ),
 });
 
@@ -300,9 +332,11 @@ const routeTree = rootRoute.addChildren([
     dashboardRoute,
     reportsRoute,
     reportContractDrilldownRoute,
+    companiesRoute,
     projectsRoute,
     contractsRoute,
     vendorsRoute,
+    quotationsRoute,
     materialsRoute,
     materialRequisitionsRoute,
     materialReceiptsRoute,
@@ -310,11 +344,13 @@ const routeTree = rootRoute.addChildren([
     materialAdjustmentsRoute,
     stockLedgerRoute,
     labourRoute,
+    labourContractorsRoute,
     labourAttendanceRoute,
     labourBillsRoute,
     labourAdvancesRoute,
     raBillsRoute,
     paymentsRoute,
+    siteExpensesRoute,
     auditLogsRoute,
     aiBoundaryRoute,
     boqRoute,

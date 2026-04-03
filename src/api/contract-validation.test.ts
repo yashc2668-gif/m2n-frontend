@@ -31,7 +31,13 @@ const ProjectSchema = z.object({
   start_date: z.string().optional(),
   expected_end_date: z.string().optional(),
   actual_end_date: z.string().optional().nullable(),
-  status: z.string().min(1), // Status is flexible string
+  status: z
+    .string()
+    .transform((value) => value.toLowerCase())
+    .refine(
+      (value) => ["active", "completed", "on_hold", "cancelled"].includes(value),
+      "Invalid project status",
+    ),
   created_at: z.string(),
   updated_at: z.string(),
 });

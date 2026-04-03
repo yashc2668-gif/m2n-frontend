@@ -69,8 +69,11 @@ export default function LabourProductivityPage() {
     enabled: Boolean(accessToken),
   });
 
-  const rows = useMemo(() => prodQuery.data ?? [], [prodQuery.data]);
-  const contracts = useMemo(() => contractsQuery.data ?? [], [contractsQuery.data]);
+  const rows = useMemo(() => (Array.isArray(prodQuery.data) ? prodQuery.data : []), [prodQuery.data]);
+  const contracts = useMemo(
+    () => (Array.isArray(contractsQuery.data) ? contractsQuery.data : []),
+    [contractsQuery.data],
+  );
 
   const trades = useMemo(() => [...new Set(rows.map((r) => r.trade))].sort(), [rows]);
 

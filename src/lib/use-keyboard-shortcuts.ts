@@ -18,7 +18,10 @@ interface ShortcutMap {
  */
 export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
   const ref = useRef(shortcuts);
-  ref.current = shortcuts;
+
+  useEffect(() => {
+    ref.current = shortcuts;
+  }, [shortcuts]);
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {

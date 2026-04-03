@@ -1,4 +1,4 @@
-import { apiDownload, apiFetch } from "@/api/client";
+import { apiDownload, apiFetch, apiFetchList } from "@/api/client";
 import type {
   LabourBill,
   LabourBillCreateInput,
@@ -7,7 +7,7 @@ import type {
 } from "@/api/types";
 
 export function fetchLabourBills(token: string) {
-  return apiFetch<LabourBill[]>("/labour-bills/", {
+  return apiFetchList<LabourBill>("/labour-bills/", {
     token,
     query: { limit: 100 },
   });

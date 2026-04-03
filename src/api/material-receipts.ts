@@ -1,4 +1,4 @@
-import { apiFetch } from "@/api/client";
+import { apiFetch, apiFetchList } from "@/api/client";
 import type {
   MaterialReceipt,
   MaterialReceiptCreateInput,
@@ -6,7 +6,7 @@ import type {
 } from "@/api/types";
 
 export function fetchMaterialReceipts(token: string) {
-  return apiFetch<MaterialReceipt[]>("/material-receipts/", {
+  return apiFetchList<MaterialReceipt>("/material-receipts/", {
     token,
     query: { limit: 100 },
   });

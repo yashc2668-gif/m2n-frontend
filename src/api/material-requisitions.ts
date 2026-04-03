@@ -1,4 +1,4 @@
-import { apiFetch } from "@/api/client";
+import { apiFetch, apiFetchList } from "@/api/client";
 import type {
   MaterialRequisition,
   MaterialRequisitionApproveInput,
@@ -6,7 +6,7 @@ import type {
 } from "@/api/types";
 
 export function fetchMaterialRequisitions(token: string) {
-  return apiFetch<MaterialRequisition[]>("/material-requisitions/", {
+  return apiFetchList<MaterialRequisition>("/material-requisitions/", {
     token,
     query: { limit: 100 },
   });

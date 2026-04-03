@@ -20,23 +20,38 @@ export const mockMatchMedia = () => {
 
 // Mock IntersectionObserver
 export const mockIntersectionObserver = () => {
-  (window as any).IntersectionObserver = vi.fn(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-    root: null,
-    rootMargin: '',
-    thresholds: [],
-  }));
+  const intersectionObserverMock = vi.fn(
+    () =>
+      ({
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+        root: null,
+        rootMargin: '',
+        thresholds: [],
+        takeRecords: vi.fn(() => []),
+      }) as IntersectionObserver,
+  );
+  Object.defineProperty(window, 'IntersectionObserver', {
+    writable: true,
+    value: intersectionObserverMock,
+  });
 };
 
 // Mock ResizeObserver
 export const mockResizeObserver = () => {
-  (window as any).ResizeObserver = vi.fn(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }));
+  const resizeObserverMock = vi.fn(
+    () =>
+      ({
+        observe: vi.fn(),
+        unobserve: vi.fn(),
+        disconnect: vi.fn(),
+      }) as ResizeObserver,
+  );
+  Object.defineProperty(window, 'ResizeObserver', {
+    writable: true,
+    value: resizeObserverMock,
+  });
 };
 
 export const setupCommonMocks = () => {

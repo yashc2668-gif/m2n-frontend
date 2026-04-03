@@ -1,4 +1,4 @@
-import { apiDownload, apiFetch } from '@/api/client';
+import { apiDownload, apiFetch, apiFetchList } from '@/api/client';
 import type {
   Measurement,
   MeasurementCreateInput,
@@ -6,7 +6,7 @@ import type {
 } from '@/api/types';
 
 export function fetchMeasurements(token: string, filters?: { contract_id?: number; status_filter?: string }) {
-  return apiFetch<Measurement[]>('/measurements/', {
+  return apiFetchList<Measurement>('/measurements/', {
     token,
     query: { limit: 200, ...filters },
   });

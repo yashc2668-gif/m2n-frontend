@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, FolderOpen, Search, Upload } from 'lucide-react';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '@/app/providers/auth-provider';
 import { apiBaseUrl, getApiErrorMessage } from '@/api/client';
@@ -17,7 +17,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Drawer } from '@/components/ui/drawer';
 import { PageHeader } from '@/components/ui/page-header';
 import { StatCard } from '@/components/ui/stat-card';
-import type { Document as DocType } from '@/api/types';
+import type { Document as DocType, DocumentEntityType } from '@/api/types';
 import { saveBlob } from '@/lib/download';
 import { formatDate, titleCase } from '@/lib/format';
 import { hasPermissions } from '@/lib/permissions';
@@ -32,12 +32,25 @@ const entityToneMap: Record<string, 'accent' | 'info' | 'success' | 'warning'> =
   measurement: 'info',
   ra_bill: 'success',
   payment: 'warning',
+  vendor: 'warning',
+  company: 'info',
+  site_expense: 'accent',
 };
+
+const documentEntityOptions: Array<{ value: DocumentEntityType; label: string }> = [
+  { value: 'contract', label: 'Contract' },
+  { value: 'measurement', label: 'Measurement' },
+  { value: 'ra_bill', label: 'RA Bill' },
+  { value: 'payment', label: 'Payment' },
+  { value: 'vendor', label: 'Vendor' },
+  { value: 'company', label: 'Company' },
+  { value: 'site_expense', label: 'Site Expense' },
+];
 
 export default function DocumentsPage() {
   const { accessToken, user } = useAuth();
   const queryClient = useQueryClient();
-  const [entityFilter, setEntityFilter] = useState('');
+  const [entityFilter, setEntityFilter] = useState<DocumentEntityType | ''>('');
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const [tablePage, setTablePage] = useState(1);
@@ -49,15 +62,21 @@ export default function DocumentsPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [drawerDoc, setDrawerDoc] = useState<DocType | null>(null);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadEntityType, setUploadEntityType] = useState('contract');
+  const [uploadEntityType, setUploadEntityType] = useState<DocumentEntityType>('contract');
   const [uploadEntityId, setUploadEntityId] = useState('');
   const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDocumentType, setUploadDocumentType] = useState('');
+  const [uploadRemarks, setUploadRemarks] = useState('');
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const { progress: uploadProgress, fileName: uploadingFileName, isUploading, upload: xhrUpload, cancel: cancelUpload, reset: resetUpload } = useUploadProgress();
 
-  useEffect(() => {
+  const resetTablePage = useEffectEvent(() => {
     setTablePage(1);
+  });
+
+  useEffect(() => {
+    resetTablePage();
   }, [deferredSearch, entityFilter]);
 
   const documentsOverviewQuery = useQuery({
@@ -80,9 +99,12 @@ export default function DocumentsPage() {
     placeholderData: (previous) => previous,
   });
 
-  const documents = useMemo(() => documentsOverviewQuery.data ?? [], [documentsOverviewQuery.data]);
+  const documents = useMemo(
+    () => (Array.isArray(documentsOverviewQuery.data) ? documentsOverviewQuery.data : []),
+    [documentsOverviewQuery.data],
+  );
   const tablePageData = documentsTableQuery.data;
-  const tableRows = tablePageData?.items ?? [];
+  const tableRows = Array.isArray(tablePageData?.items) ? tablePageData.items : [];
 
   const metrics = useMemo(() => ({
     total: documents.length,
@@ -121,6 +143,12 @@ export default function DocumentsPage() {
       formData.append('entity_type', uploadEntityType);
       formData.append('entity_id', uploadEntityId);
       formData.append('title', uploadTitle.trim());
+      if (uploadDocumentType.trim()) {
+        formData.append('document_type', uploadDocumentType.trim());
+      }
+      if (uploadRemarks.trim()) {
+        formData.append('remarks', uploadRemarks.trim());
+      }
       const resp = await xhrUpload(`${apiBaseUrl}/documents/upload`, formData, accessToken ?? '');
       if (!resp.ok) throw new Error(await resp.text());
       return resp.json();
@@ -132,6 +160,8 @@ export default function DocumentsPage() {
       setUploadFile(null);
       setUploadEntityId('');
       setUploadTitle('');
+      setUploadDocumentType('');
+      setUploadRemarks('');
       resetUpload();
     },
   });
@@ -157,8 +187,8 @@ export default function DocumentsPage() {
       <div className="space-y-6">
         <PageHeader
           eyebrow="Documents"
-          title="Centralised document archive for contracts, measurements, and bills."
-          description="Upload and manage files attached to ERP entities. Documents support versioning so you can track history."
+          title="Centralised document archive for contracts, quotations, measurements, and bills."
+          description="Upload and manage files attached to ERP entities, including vendor and company quotation records. Documents support versioning so you can track history."
           actions={
             <Button disabled={!canCreate} onClick={() => { setShowUpload(true); setServerMessage(null); }}>
               <Upload className="size-4" /> Upload document
@@ -177,12 +207,17 @@ export default function DocumentsPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="space-y-2">
               <span className={labelClassName}>Entity type</span>
-              <select className={inputClassName} value={entityFilter} onChange={(e) => setEntityFilter(e.target.value)}>
+              <select
+                className={inputClassName}
+                value={entityFilter}
+                onChange={(e) => setEntityFilter((e.target.value || '') as DocumentEntityType | '')}
+              >
                 <option value="">All types</option>
-                <option value="contract">Contract</option>
-                <option value="measurement">Measurement</option>
-                <option value="ra_bill">RA Bill</option>
-                <option value="payment">Payment</option>
+                {documentEntityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="space-y-2">
@@ -232,7 +267,7 @@ export default function DocumentsPage() {
           emptyState={<EmptyState title="No documents found" description="Upload documents to build your project archive." />}
         />
 
-        <Drawer open={showUpload} title="Upload Document" description="Attach a file to a contract, measurement, RA bill, or payment." onClose={() => setShowUpload(false)}>
+        <Drawer open={showUpload} title="Upload Document" description="Attach a file to a contract, measurement, RA bill, payment, vendor, or company." onClose={() => setShowUpload(false)}>
           <div className="space-y-4">
             <label className="space-y-2">
               <span className={labelClassName}>Title</span>
@@ -240,16 +275,39 @@ export default function DocumentsPage() {
             </label>
             <label className="space-y-2">
               <span className={labelClassName}>Entity type</span>
-              <select className={inputClassName} value={uploadEntityType} onChange={(e) => setUploadEntityType(e.target.value)}>
-                <option value="contract">Contract</option>
-                <option value="measurement">Measurement</option>
-                <option value="ra_bill">RA Bill</option>
-                <option value="payment">Payment</option>
+              <select
+                className={inputClassName}
+                value={uploadEntityType}
+                onChange={(e) => setUploadEntityType(e.target.value as DocumentEntityType)}
+              >
+                {documentEntityOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="space-y-2">
               <span className={labelClassName}>Entity ID</span>
               <input className={inputClassName} type="number" value={uploadEntityId} onChange={(e) => setUploadEntityId(e.target.value)} placeholder="1" />
+            </label>
+            <label className="space-y-2">
+              <span className={labelClassName}>Document type</span>
+              <input
+                className={inputClassName}
+                value={uploadDocumentType}
+                onChange={(e) => setUploadDocumentType(e.target.value)}
+                placeholder="quotation, invoice, drawing"
+              />
+            </label>
+            <label className="space-y-2">
+              <span className={labelClassName}>Remarks</span>
+              <textarea
+                className={`${inputClassName} min-h-24 resize-none`}
+                value={uploadRemarks}
+                onChange={(e) => setUploadRemarks(e.target.value)}
+                placeholder="Optional notes for ops, finance, or follow-up"
+              />
             </label>
             <label className="space-y-2">
               <span className={labelClassName}>File</span>

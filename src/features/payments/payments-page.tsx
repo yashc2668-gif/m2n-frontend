@@ -107,9 +107,9 @@ export default function PaymentsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const payments = paymentsQuery.data ?? EMPTY_LIST;
-  const outstandingBills = outstandingQuery.data ?? EMPTY_LIST;
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
+  const payments = Array.isArray(paymentsQuery.data) ? paymentsQuery.data : EMPTY_LIST;
+  const outstandingBills = Array.isArray(outstandingQuery.data) ? outstandingQuery.data : EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
   const contractMap = useMemo(
     () => new Map(contracts.map((contract) => [contract.id, `${contract.contract_no} - ${contract.title}`])),
     [contracts],
@@ -147,13 +147,16 @@ export default function PaymentsPage() {
     queryFn: () => fetchOutstandingBills(accessToken ?? "", activeContractId),
     enabled: Boolean(accessToken && activeContractId),
   });
+  const drawerOutstandingBills = Array.isArray(drawerOutstandingQuery.data)
+    ? drawerOutstandingQuery.data
+    : EMPTY_LIST;
 
   useEffect(() => {
-    const firstBillId = drawerOutstandingQuery.data?.[0]?.ra_bill_id;
+    const firstBillId = drawerOutstandingBills[0]?.ra_bill_id;
     allocationForm.reset({
       allocations: [buildPaymentAllocationLine(firstBillId ? String(firstBillId) : "")],
     });
-  }, [allocationForm, drawerOutstandingQuery.data, selectedPaymentId]);
+  }, [allocationForm, drawerOutstandingBills, selectedPaymentId]);
 
   const filteredPayments = useMemo(
     () => filterPayments(payments, filters),
@@ -487,7 +490,7 @@ export default function PaymentsPage() {
                     <span className={labelClassName}>Seed RA bill</span>
                     <select className={inputClassName} {...paymentForm.register("ra_bill_id")}>
                       <option value="">Optional outstanding bill</option>
-                      {(drawerOutstandingQuery.data ?? EMPTY_LIST).map((bill) => (
+                      {drawerOutstandingBills.map((bill) => (
                         <option key={bill.ra_bill_id} value={bill.ra_bill_id}>Bill #{bill.bill_no} / {formatCurrency(bill.outstanding_amount)}</option>
                       ))}
                     </select>
@@ -562,13 +565,13 @@ export default function PaymentsPage() {
                   <Card className="p-5">
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--surface-ink)]">Contract outstanding bills</p>
-                      <Badge tone="warning">{(drawerOutstandingQuery.data ?? EMPTY_LIST).length}</Badge>
+                      <Badge tone="warning">{drawerOutstandingBills.length}</Badge>
                     </div>
-                    {(drawerOutstandingQuery.data ?? EMPTY_LIST).length === 0 ? (
+                    {drawerOutstandingBills.length === 0 ? (
                       <Card className="border-dashed p-4 text-sm text-[var(--surface-muted)]">No eligible outstanding bills under this contract.</Card>
                     ) : (
                       <div className="grid gap-3">
-                        {(drawerOutstandingQuery.data ?? EMPTY_LIST).map((bill) => (
+                        {drawerOutstandingBills.map((bill) => (
                           <div key={bill.ra_bill_id} className="rounded-[var(--radius)] border border-[color:var(--line)] bg-white/75 p-4">
                             <div className="flex items-center justify-between gap-3">
                               <p className="font-semibold text-[var(--surface-ink)]">Bill #{bill.bill_no}</p>
@@ -593,7 +596,7 @@ export default function PaymentsPage() {
                             <p className="text-sm font-semibold text-[var(--surface-ink)]">Allocate released payment</p>
                             <p className="text-sm text-[var(--surface-muted)]">Draft allocation total {formatCurrency(draftAllocationTotal)} against available {formatCurrency(selectedPayment.available_amount)}.</p>
                           </div>
-                          <Button type="button" size="sm" variant="secondary" onClick={() => allocationArray.append(buildPaymentAllocationLine((drawerOutstandingQuery.data ?? EMPTY_LIST)[0] ? String((drawerOutstandingQuery.data ?? EMPTY_LIST)[0].ra_bill_id) : ""))}><Plus className="size-4" />Add line</Button>
+                          <Button type="button" size="sm" variant="secondary" onClick={() => allocationArray.append(buildPaymentAllocationLine(drawerOutstandingBills[0] ? String(drawerOutstandingBills[0].ra_bill_id) : ""))}><Plus className="size-4" />Add line</Button>
                         </div>
                         <div className="grid gap-3">
                           {allocationArray.fields.map((field, index) => (
@@ -603,7 +606,7 @@ export default function PaymentsPage() {
                                   <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--surface-faint)]">RA bill</span>
                                   <select className={inputClassName} {...allocationForm.register(`allocations.${index}.ra_bill_id`)}>
                                     <option value="">Select bill</option>
-                                    {(drawerOutstandingQuery.data ?? EMPTY_LIST).map((bill) => (
+                                    {drawerOutstandingBills.map((bill) => (
                                       <option key={bill.ra_bill_id} value={bill.ra_bill_id}>Bill #{bill.bill_no}</option>
                                     ))}
                                   </select>

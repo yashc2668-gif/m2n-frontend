@@ -1,8 +1,8 @@
-import { apiFetch } from '@/api/client';
+import { apiFetch, apiFetchList } from '@/api/client';
 import type { BOQItem, BOQItemCreateInput, BOQItemUpdateInput } from '@/api/types';
 
 export function fetchBOQItems(token: string, contractId: number) {
-  return apiFetch<BOQItem[]>(`/contracts/${contractId}/boq-items/`, {
+  return apiFetchList<BOQItem>(`/contracts/${contractId}/boq-items/`, {
     token,
     query: { limit: 500 },
   });

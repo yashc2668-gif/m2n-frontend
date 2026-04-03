@@ -127,10 +127,10 @@ export default function LabourAttendancePage() {
     enabled: Boolean(accessToken),
   });
 
-  const attendances = attendancesQuery.data ?? EMPTY_LIST;
-  const labours = laboursQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const contractors = contractorsQuery.data ?? EMPTY_LIST;
+  const attendances = Array.isArray(attendancesQuery.data) ? attendancesQuery.data : EMPTY_LIST;
+  const labours = Array.isArray(laboursQuery.data) ? laboursQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const contractors = Array.isArray(contractorsQuery.data) ? contractorsQuery.data : EMPTY_LIST;
 
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),

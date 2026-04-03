@@ -54,8 +54,14 @@ export default function MeasurementsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const contracts = useMemo(() => contractsQuery.data ?? [], [contractsQuery.data]);
-  const measurements = useMemo(() => measurementsQuery.data ?? [], [measurementsQuery.data]);
+  const contracts = useMemo(
+    () => (Array.isArray(contractsQuery.data) ? contractsQuery.data : []),
+    [contractsQuery.data],
+  );
+  const measurements = useMemo(
+    () => (Array.isArray(measurementsQuery.data) ? measurementsQuery.data : []),
+    [measurementsQuery.data],
+  );
 
   const filtered = useMemo(() => {
     let result = measurements;

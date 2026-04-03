@@ -112,10 +112,10 @@ export default function LabourAdvancesPage() {
     enabled: Boolean(accessToken),
   });
 
-  const advances = advancesQuery.data ?? EMPTY_LIST;
-  const bills = billsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const contractors = contractorsQuery.data ?? EMPTY_LIST;
+  const advances = Array.isArray(advancesQuery.data) ? advancesQuery.data : EMPTY_LIST;
+  const bills = Array.isArray(billsQuery.data) ? billsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const contractors = Array.isArray(contractorsQuery.data) ? contractorsQuery.data : EMPTY_LIST;
 
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),

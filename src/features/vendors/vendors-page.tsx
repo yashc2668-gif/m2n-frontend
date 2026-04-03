@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Building2,
   FileText,
@@ -34,6 +34,7 @@ import {
   getVendorAttention,
   getVendorMetrics,
 } from "@/features/masters/masters-helpers";
+import { stageQuotationContext } from "@/features/quotations/quotation-intake";
 import { formatCompactNumber, titleCase } from "@/lib/format";
 import { hasPermissions } from "@/lib/permissions";
 import { useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
@@ -63,6 +64,7 @@ const vendorFormSchema = z.object({
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
 
 export default function VendorsPage() {
+  const navigate = useNavigate();
   const { accessToken, user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -83,8 +85,8 @@ export default function VendorsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const vendors = vendorsQuery.data ?? EMPTY_LIST;
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
+  const vendors = Array.isArray(vendorsQuery.data) ? vendorsQuery.data : EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
 
   const contractCounts = useMemo(() => {
     const counts = new Map<number, number>();
@@ -157,6 +159,16 @@ export default function VendorsPage() {
 
   const canCreate = hasPermissions(user?.role ?? "viewer", ["vendors:create"]);
   const canUpdate = hasPermissions(user?.role ?? "viewer", ["vendors:update"]);
+  const canCreateDocuments = hasPermissions(user?.role ?? "viewer", ["documents:create"]);
+
+  const openQuotationFlow = (vendorId: number, openComposer = true) => {
+    stageQuotationContext({
+      entityType: "vendor",
+      entityId: vendorId,
+      openComposer,
+    });
+    void navigate({ to: "/quotations" });
+  };
 
   useKeyboardShortcuts({
     'ctrl+n': () => {
@@ -250,6 +262,13 @@ export default function VendorsPage() {
               >
                 <Truck className="size-4" />
                 Open receipts
+              </Link>
+              <Link
+                className={buttonVariants({ variant: "secondary" })}
+                to="/quotations"
+              >
+                <FileText className="size-4" />
+                Quotation register
               </Link>
               <Button
                 disabled={!canCreate}
@@ -523,18 +542,30 @@ export default function VendorsPage() {
                 {
                   header: "Action",
                   cell: (row) => (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      disabled={!canUpdate}
-                      onClick={() => {
-                        setEditingVendorId(row.id);
-                        setServerMessage(null);
-                      }}
-                    >
-                      <PencilLine className="size-4" />
-                      Edit
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!canUpdate}
+                        onClick={() => {
+                          setEditingVendorId(row.id);
+                          setServerMessage(null);
+                        }}
+                      >
+                        <PencilLine className="size-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="secondary"
+                        disabled={!canCreateDocuments}
+                        onClick={() => openQuotationFlow(row.id)}
+                      >
+                        <FileText className="size-4" />
+                        Upload quote
+                      </Button>
+                    </div>
                   ),
                 },
               ]}
@@ -723,6 +754,17 @@ export default function VendorsPage() {
                 >
                   Reset form
                 </Button>
+                {selectedVendor ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={!canCreateDocuments}
+                    onClick={() => openQuotationFlow(selectedVendor.id)}
+                  >
+                    <FileText className="size-4" />
+                    Upload quotation
+                  </Button>
+                ) : null}
               </div>
             </form>
           </Card>

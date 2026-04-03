@@ -137,6 +137,9 @@ const rolePermissions: Record<AppRole, Set<string>> = {
     'ra_bills:cancel',
     'ra_bills:finance_hold',
     'payments:read',
+    'site_expenses:create',
+    'site_expenses:read',
+    'site_expenses:update',
     'audit_logs:read',
     'workflows:read',
   ]),
@@ -206,6 +209,9 @@ const rolePermissions: Record<AppRole, Set<string>> = {
     'work_done:read',
     'ra_bills:read',
     'payments:read',
+    'site_expenses:create',
+    'site_expenses:read',
+    'site_expenses:update',
     'workflows:read',
   ]),
   accountant: new Set([
@@ -256,6 +262,11 @@ const rolePermissions: Record<AppRole, Set<string>> = {
     'payments:approve',
     'payments:release',
     'payments:allocate',
+    'site_expenses:create',
+    'site_expenses:read',
+    'site_expenses:update',
+    'site_expenses:approve',
+    'site_expenses:pay',
     'audit_logs:read',
     'workflows:read',
   ]),
@@ -285,6 +296,7 @@ const rolePermissions: Record<AppRole, Set<string>> = {
     'work_done:read',
     'ra_bills:read',
     'payments:read',
+    'site_expenses:read',
   ]),
   viewer: new Set([
     'dashboard:read',
@@ -312,6 +324,7 @@ const rolePermissions: Record<AppRole, Set<string>> = {
     'work_done:read',
     'ra_bills:read',
     'payments:read',
+    'site_expenses:read',
   ]),
 };
 

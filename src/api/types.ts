@@ -813,6 +813,31 @@ export interface Labour {
   updated_at: string | null;
 }
 
+export interface LabourCreateInput {
+  company_id: number;
+  labour_code: string;
+  full_name: string;
+  trade?: string | null;
+  skill_level?: string | null;
+  daily_rate?: number;
+  unit?: string;
+  contractor_id?: number | null;
+  is_active?: boolean;
+}
+
+export interface LabourUpdateInput {
+  lock_version?: number;
+  company_id?: number;
+  labour_code?: string;
+  full_name?: string;
+  trade?: string | null;
+  skill_level?: string | null;
+  daily_rate?: number;
+  unit?: string;
+  contractor_id?: number | null;
+  is_active?: boolean;
+}
+
 export interface LabourContractor {
   id: number;
   company_id: number | null;
@@ -826,6 +851,27 @@ export interface LabourContractor {
   lock_version: number;
   created_at: string;
   updated_at: string | null;
+}
+
+export interface LabourContractorCreateInput {
+  company_id: number;
+  contractor_code?: string | null;
+  contractor_name: string;
+  contact_person?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  is_active?: boolean;
+}
+
+export interface LabourContractorUpdateInput {
+  lock_version?: number;
+  company_id?: number;
+  contractor_code?: string | null;
+  contractor_name?: string;
+  contact_person?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  is_active?: boolean;
 }
 
 export interface Contract {
@@ -1168,6 +1214,61 @@ export interface Payment {
   allocated_amount: number;
   available_amount: number;
   allocations: PaymentAllocation[];
+  lock_version: number;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface SiteExpenseCreateInput {
+  expense_no: string;
+  project_id: number;
+  vendor_id?: number | null;
+  expense_date: string;
+  expense_head: string;
+  payee_name?: string | null;
+  amount: number;
+  payment_mode?: string | null;
+  reference_no?: string | null;
+  remarks?: string | null;
+}
+
+export interface SiteExpenseUpdateInput {
+  lock_version?: number;
+  expense_no?: string;
+  project_id?: number;
+  vendor_id?: number | null;
+  expense_date?: string;
+  expense_head?: string;
+  payee_name?: string | null;
+  amount?: number;
+  payment_mode?: string | null;
+  reference_no?: string | null;
+  remarks?: string | null;
+}
+
+export interface SiteExpenseActionInput {
+  lock_version?: number;
+  remarks?: string | null;
+}
+
+export interface SiteExpense {
+  id: number;
+  expense_no: string;
+  project_id: number;
+  vendor_id: number | null;
+  expense_date: string;
+  expense_head: string;
+  payee_name: string | null;
+  amount: number;
+  payment_mode: string | null;
+  reference_no: string | null;
+  status: "draft" | "approved" | "paid";
+  remarks: string | null;
+  created_by: number | null;
+  approved_by: number | null;
+  approved_at: string | null;
+  paid_by: number | null;
+  paid_at: string | null;
   lock_version: number;
   created_at: string;
   updated_at: string | null;
@@ -1532,7 +1633,17 @@ export interface SecuredAdvanceUpdateInput {
 
 // ── Documents ────────────────────────────────────────────
 
-export type DocumentEntityType = 'contract' | 'measurement' | 'ra_bill' | 'payment';
+export type DocumentEntityType =
+  | 'contract'
+  | 'measurement'
+  | 'ra_bill'
+  | 'payment'
+  | 'vendor'
+  | 'company'
+  | 'labour_attendance'
+  | 'labour_bill'
+  | 'labour_advance'
+  | 'site_expense';
 
 export interface DocumentVersion {
   id: number;

@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, HardHat, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { resetPasswordRequest } from '@/api/auth';
@@ -30,15 +30,15 @@ export default function ResetPasswordPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ResetValues>({
     resolver: zodResolver(resetSchema),
     defaultValues: { email: '', otp_code: '', new_password: '' },
   });
 
-  const watchedPassword = watch('new_password');
-  const watchedEmail = watch('email');
+  const watchedPassword = useWatch({ control, name: 'new_password' });
+  const watchedEmail = useWatch({ control, name: 'email' });
 
   const onSubmit = handleSubmit(async (values) => {
     setServerError(null);

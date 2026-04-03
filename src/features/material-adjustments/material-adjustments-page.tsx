@@ -80,9 +80,9 @@ export default function MaterialAdjustmentsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const adjustments = adjustmentsQuery.data ?? EMPTY_LIST;
-  const materials = materialsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
+  const adjustments = Array.isArray(adjustmentsQuery.data) ? adjustmentsQuery.data : EMPTY_LIST;
+  const materials = Array.isArray(materialsQuery.data) ? materialsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
   const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
   const materialMap = useMemo(() => new Map(materials.map((material) => [material.id, material])), [materials]);
   const selectedAdjustment = useMemo(() => adjustments.find((adjustment) => adjustment.id === selectedAdjustmentId) ?? null, [adjustments, selectedAdjustmentId]);

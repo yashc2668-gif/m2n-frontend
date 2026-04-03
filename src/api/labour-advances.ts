@@ -1,4 +1,4 @@
-import { apiFetch } from "@/api/client";
+import { apiFetch, apiFetchList } from "@/api/client";
 import type {
   LabourAdvance,
   LabourAdvanceCreateInput,
@@ -8,7 +8,7 @@ import type {
 } from "@/api/types";
 
 export function fetchLabourAdvances(token: string) {
-  return apiFetch<LabourAdvance[]>("/labour-advances/", {
+  return apiFetchList<LabourAdvance>("/labour-advances/", {
     token,
     query: { limit: 100 },
   });

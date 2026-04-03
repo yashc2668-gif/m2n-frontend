@@ -120,11 +120,11 @@ export default function LabourBillsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const bills = billsQuery.data ?? EMPTY_LIST;
-  const attendances = attendancesQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const contractors = contractorsQuery.data ?? EMPTY_LIST;
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
+  const bills = Array.isArray(billsQuery.data) ? billsQuery.data : EMPTY_LIST;
+  const attendances = Array.isArray(attendancesQuery.data) ? attendancesQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const contractors = Array.isArray(contractorsQuery.data) ? contractorsQuery.data : EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
 
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),

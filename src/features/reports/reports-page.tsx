@@ -11,7 +11,7 @@ import {
   ShieldAlert,
   TrendingUp,
 } from 'lucide-react';
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -152,19 +152,29 @@ export default function ReportsPage() {
     id: 'outstanding_retention_amount',
     direction: 'desc',
   });
+  const [wbsPage, setWbsPage] = useState(1);
+  const [wbsPageSize, setWbsPageSize] = useState(25);
+  const [wbsSort, setWbsSort] = useState<TableSortState>({
+    id: 'remaining_amount',
+    direction: 'desc',
+  });
   const searchRef = useRef<HTMLInputElement>(null);
 
   useKeyboardShortcuts({
     '/': () => searchRef.current?.focus(),
   });
 
-  useEffect(() => {
+  const resetReportPages = useEffectEvent(() => {
     setTablePage(1);
     setContractPage(1);
     setMaterialPage(1);
     setLabourPage(1);
     setRetentionPage(1);
     setWbsPage(1);
+  });
+
+  useEffect(() => {
+    resetReportPages();
   }, [companyFilter, deferredSearch, statusFilter]);
 
   const summaryQuery = useQuery({
@@ -411,14 +421,6 @@ export default function ReportsPage() {
     },
   });
 
-  // ── WBS state ────────────────────────────────────────────
-  const [wbsPage, setWbsPage] = useState(1);
-  const [wbsPageSize, setWbsPageSize] = useState(25);
-  const [wbsSort, setWbsSort] = useState<TableSortState>({
-    id: 'remaining_amount',
-    direction: 'desc',
-  });
-
   const wbsQuery = useQuery({
     queryKey: [
       'reports',
@@ -488,7 +490,7 @@ export default function ReportsPage() {
     },
   });
 
-  const companies = companiesQuery.data ?? EMPTY_LIST;
+  const companies = Array.isArray(companiesQuery.data) ? companiesQuery.data : EMPTY_LIST;
   const misSummary: MISSummaryReport | undefined = misSummaryQuery.data;
   const misMonthlyTrend = misSummary?.monthly_trend ?? EMPTY_LIST;
   const misStatusMix = misSummary?.status_mix ?? EMPTY_LIST;

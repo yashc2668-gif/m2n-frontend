@@ -12,7 +12,7 @@ import {
   Search,
   WalletCards,
 } from "lucide-react";
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -28,7 +28,7 @@ import {
   fetchProjectsPage,
   updateProject,
 } from "@/api/projects";
-import type { Project } from "@/api/types";
+import type { Company, Project } from "@/api/types";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { ErrorState } from "@/components/feedback/error-state";
 import { PageSkeleton } from "@/components/feedback/skeleton";
@@ -145,15 +145,22 @@ export default function ProjectsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const companies = companiesQuery.data ?? EMPTY_LIST;
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const companies = Array.isArray(companiesQuery.data) ? companiesQuery.data : EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
   const tableProjects = projectsTableQuery.data?.items ?? EMPTY_LIST;
   const tableProjectTotal = projectsTableQuery.data?.total ?? 0;
 
   const companyMap = useMemo(
-    () => new Map(companies.map((company) => [company.id, company.name])),
+    () => new Map<number, Company>(companies.map((company) => [company.id, company])),
     [companies],
+  );
+  const selectedCompany = useMemo(
+    () =>
+      companyFilter === "all"
+        ? null
+        : companies.find((company) => company.id === Number(companyFilter)) ?? null,
+    [companies, companyFilter],
   );
 
   const contractCounts = useMemo(() => {
@@ -204,9 +211,13 @@ export default function ProjectsPage() {
     });
   }, [reset, selectedProject]);
 
-  useEffect(() => {
+  const resetProjectTableState = useEffectEvent(() => {
     setTablePage(1);
     setSelectedProjectKeys(new Set());
+  });
+
+  useEffect(() => {
+    resetProjectTableState();
   }, [companyFilter, deferredSearch, statusFilter]);
 
   const filteredProjects = useMemo(
@@ -344,10 +355,38 @@ export default function ProjectsPage() {
         id: "company_name",
         header: "Company",
         sortKey: "company_name",
-        exportValue: (row) => companyMap.get(row.company_id) ?? "",
+        exportValue: (row) => {
+          const company = companyMap.get(row.company_id);
+          return [
+            company?.name ?? `Company #${row.company_id}`,
+            company?.gst_number ? `GST ${company.gst_number}` : null,
+            company?.pan_number ? `PAN ${company.pan_number}` : null,
+            company?.phone ?? company?.email ?? company?.address ?? null,
+          ]
+            .filter(Boolean)
+            .join(" | ");
+        },
         minWidth: 180,
-        cell: (row) =>
-          companyMap.get(row.company_id) ?? `Company #${row.company_id}`,
+        cell: (row) => {
+          const company = companyMap.get(row.company_id);
+          return (
+            <div className="space-y-1 text-sm">
+              <p className="font-semibold text-[var(--surface-ink)]">
+                {company?.name ?? `Company #${row.company_id}`}
+              </p>
+              <p className="text-[var(--surface-faint)]">
+                {company?.gst_number
+                  ? `GST ${company.gst_number}`
+                  : company?.pan_number
+                    ? `PAN ${company.pan_number}`
+                    : "Tax details not captured"}
+              </p>
+              <p className="text-[var(--surface-faint)]">
+                {company?.phone ?? company?.email ?? company?.address ?? "Contact details not captured"}
+              </p>
+            </div>
+          );
+        },
       },
       {
         id: "client_name",
@@ -481,6 +520,13 @@ export default function ProjectsPage() {
             <>
               <Link
                 className={buttonVariants({ variant: "secondary" })}
+                to="/companies"
+              >
+                <Building2 className="size-4" />
+                Open companies
+              </Link>
+              <Link
+                className={buttonVariants({ variant: "secondary" })}
                 to="/contracts"
               >
                 <FileText className="size-4" />
@@ -587,6 +633,51 @@ export default function ProjectsPage() {
               </div>
             </Card>
 
+            {selectedCompany ? (
+              <Card className="p-5">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--surface-faint)]">
+                      Selected company
+                    </p>
+                    <h3 className="mt-2 text-2xl text-[var(--surface-ink)]">
+                      {selectedCompany.name}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[var(--surface-muted)]">
+                      {selectedCompany.address || "Address not captured"}
+                    </p>
+                  </div>
+                  <Badge tone="info">Company #{selectedCompany.id}</Badge>
+                </div>
+                <div className="mt-4 grid gap-3 text-sm text-[var(--surface-muted)] md:grid-cols-2 xl:grid-cols-4">
+                  <p>
+                    GST:{" "}
+                    <span className="font-semibold text-[var(--surface-ink)]">
+                      {selectedCompany.gst_number || "Not captured"}
+                    </span>
+                  </p>
+                  <p>
+                    PAN:{" "}
+                    <span className="font-semibold text-[var(--surface-ink)]">
+                      {selectedCompany.pan_number || "Not captured"}
+                    </span>
+                  </p>
+                  <p>
+                    Phone:{" "}
+                    <span className="font-semibold text-[var(--surface-ink)]">
+                      {selectedCompany.phone || "Not captured"}
+                    </span>
+                  </p>
+                  <p>
+                    Email:{" "}
+                    <span className="font-semibold text-[var(--surface-ink)]">
+                      {selectedCompany.email || "Not captured"}
+                    </span>
+                  </p>
+                </div>
+              </Card>
+            ) : null}
+
             <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
               <Card className="p-5">
                 <div className="mb-4 flex items-center justify-between">
@@ -613,34 +704,46 @@ export default function ProjectsPage() {
                         key={project.id}
                         className="rounded-[var(--radius)] border border-[color:var(--line)] bg-white/75 p-4"
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="font-semibold text-[var(--surface-ink)]">
-                              {project.name}
-                            </p>
-                            <p className="text-xs uppercase tracking-[0.15em] text-[var(--surface-faint)]">
-                              {project.code || "No project code"}
-                            </p>
-                          </div>
-                          <Badge tone={attentionToneMap[attention]}>
-                            {titleCase(attention)}
-                          </Badge>
-                        </div>
-                        <div className="mt-3 grid gap-2 text-sm text-[var(--surface-muted)]">
-                          <p>
-                            Company:{" "}
-                            <span className="font-semibold text-[var(--surface-ink)]">
-                              {companyMap.get(project.company_id) ??
-                                `Company #${project.company_id}`}
-                            </span>
-                          </p>
-                          <p>
-                            Contracts linked:{" "}
-                            <span className="font-semibold text-[var(--surface-ink)]">
-                              {contractCounts.get(project.id) ?? 0}
-                            </span>
-                          </p>
-                        </div>
+                        {(() => {
+                          const company = companyMap.get(project.company_id);
+                          return (
+                            <>
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <p className="font-semibold text-[var(--surface-ink)]">
+                                    {project.name}
+                                  </p>
+                                  <p className="text-xs uppercase tracking-[0.15em] text-[var(--surface-faint)]">
+                                    {project.code || "No project code"}
+                                  </p>
+                                </div>
+                                <Badge tone={attentionToneMap[attention]}>
+                                  {titleCase(attention)}
+                                </Badge>
+                              </div>
+                              <div className="mt-3 grid gap-2 text-sm text-[var(--surface-muted)]">
+                                <p>
+                                  Company:{" "}
+                                  <span className="font-semibold text-[var(--surface-ink)]">
+                                    {company?.name ?? `Company #${project.company_id}`}
+                                  </span>
+                                </p>
+                                <p>
+                                  GST / PAN:{" "}
+                                  <span className="font-semibold text-[var(--surface-ink)]">
+                                    {company?.gst_number ?? company?.pan_number ?? "Not captured"}
+                                  </span>
+                                </p>
+                                <p>
+                                  Contracts linked:{" "}
+                                  <span className="font-semibold text-[var(--surface-ink)]">
+                                    {contractCounts.get(project.id) ?? 0}
+                                  </span>
+                                </p>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     ))
                   )}
@@ -650,6 +753,7 @@ export default function ProjectsPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {filteredProjects.slice(0, 4).map((project) => {
                   const contractCount = contractCounts.get(project.id) ?? 0;
+                  const company = companyMap.get(project.company_id);
                   return (
                     <div
                       key={project.id}
@@ -675,8 +779,19 @@ export default function ProjectsPage() {
                         </Badge>
                       </div>
                       <p className="mt-4 text-sm leading-6 text-[var(--surface-muted)]">
-                        Client {project.client_name || "Not captured"} �
-                        Location {project.location || "Not captured"}
+                        {`Client ${project.client_name || "Not captured"} · Location ${project.location || "Not captured"}`}
+                      </p>
+                      <p className="mt-3 text-sm text-[var(--surface-muted)]">
+                        Company{" "}
+                        <span className="font-semibold text-[var(--surface-ink)]">
+                          {company?.name ?? `Company #${project.company_id}`}
+                        </span>
+                      </p>
+                      <p className="mt-2 text-sm text-[var(--surface-muted)]">
+                        GST / Contact{" "}
+                        <span className="font-semibold text-[var(--surface-ink)]">
+                          {company?.gst_number ?? company?.phone ?? company?.email ?? "Not captured"}
+                        </span>
                       </p>
                       <p className="mt-3 text-sm text-[var(--surface-muted)]">
                         Contracts linked:{" "}

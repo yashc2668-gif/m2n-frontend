@@ -87,11 +87,11 @@ export default function MaterialReceiptsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const receipts = receiptsQuery.data ?? EMPTY_LIST;
-  const materials = materialsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const vendors = vendorsQuery.data ?? EMPTY_LIST;
-  const stockSummary = stockSummaryQuery.data ?? EMPTY_LIST;
+  const receipts = Array.isArray(receiptsQuery.data) ? receiptsQuery.data : EMPTY_LIST;
+  const materials = Array.isArray(materialsQuery.data) ? materialsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const vendors = Array.isArray(vendorsQuery.data) ? vendorsQuery.data : EMPTY_LIST;
+  const stockSummary = Array.isArray(stockSummaryQuery.data) ? stockSummaryQuery.data : EMPTY_LIST;
 
   const projectMap = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
   const vendorMap = useMemo(() => new Map(vendors.map((vendor) => [vendor.id, vendor.name])), [vendors]);

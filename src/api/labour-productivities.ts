@@ -1,4 +1,4 @@
-import { apiFetch } from '@/api/client';
+import { apiFetch, apiFetchList } from '@/api/client';
 import type {
   LabourProductivity,
   LabourProductivityCreateInput,
@@ -9,7 +9,7 @@ export function fetchLabourProductivities(
   token: string,
   filters?: { project_id?: number; contract_id?: number; labour_id?: number; trade?: string },
 ) {
-  return apiFetch<LabourProductivity[]>('/labour-productivities/', {
+  return apiFetchList<LabourProductivity>('/labour-productivities/', {
     token,
     query: { limit: 200, ...filters },
   });

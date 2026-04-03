@@ -57,8 +57,11 @@ export default function BOQPage() {
     enabled: Boolean(accessToken && selectedContractId),
   });
 
-  const contracts = useMemo(() => contractsQuery.data ?? [], [contractsQuery.data]);
-  const boqItems = useMemo(() => boqQuery.data ?? [], [boqQuery.data]);
+  const contracts = useMemo(
+    () => (Array.isArray(contractsQuery.data) ? contractsQuery.data : []),
+    [contractsQuery.data],
+  );
+  const boqItems = useMemo(() => (Array.isArray(boqQuery.data) ? boqQuery.data : []), [boqQuery.data]);
 
   const filteredItems = useMemo(() => {
     if (!search) return boqItems;

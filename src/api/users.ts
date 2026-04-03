@@ -1,8 +1,8 @@
-import { apiFetch } from '@/api/client';
+import { apiFetch, apiFetchList } from '@/api/client';
 import type { User, UserCreateInput, UserUpdateInput } from '@/api/types';
 
 export function fetchUsers(token: string) {
-  return apiFetch<User[]>('/users/', {
+  return apiFetchList<User>('/users/', {
     token,
     query: { limit: 500 },
   });

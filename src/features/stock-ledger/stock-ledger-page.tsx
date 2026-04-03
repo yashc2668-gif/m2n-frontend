@@ -30,7 +30,7 @@ export default function StockLedgerPage() {
     );
   }
 
-  if (ledgerQuery.error || !ledgerQuery.data) {
+  if (ledgerQuery.error || !Array.isArray(ledgerQuery.data)) {
     return (
       <ErrorState
         description={ledgerQuery.error?.message ?? "Stock ledger could not be loaded."}

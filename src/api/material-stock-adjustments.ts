@@ -1,4 +1,4 @@
-import { apiFetch } from "@/api/client";
+import { apiFetch, apiFetchList } from "@/api/client";
 import type {
   MaterialStockAdjustment,
   MaterialStockAdjustmentCreateInput,
@@ -6,7 +6,7 @@ import type {
 } from "@/api/types";
 
 export function fetchMaterialStockAdjustments(token: string) {
-  return apiFetch<MaterialStockAdjustment[]>("/material-stock-adjustments/", {
+  return apiFetchList<MaterialStockAdjustment>("/material-stock-adjustments/", {
     token,
     query: { limit: 100 },
   });

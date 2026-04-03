@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ActivitySquare, Download } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useState } from "react";
 
 import { useAuth } from "@/app/providers/auth-provider";
 import { exportAuditLogs, fetchAuditLogsPage } from "@/api/audit";
@@ -63,8 +63,12 @@ export default function AuditPage() {
   const [tablePage, setTablePage] = useState(1);
   const [tablePageSize, setTablePageSize] = useState(25);
 
-  useEffect(() => {
+  const resetTablePage = useEffectEvent(() => {
     setTablePage(1);
+  });
+
+  useEffect(() => {
+    resetTablePage();
   }, [action, dateFrom, dateTo, entityType, performedBy]);
 
   const auditQuery = useQuery({
@@ -106,7 +110,7 @@ export default function AuditPage() {
     },
   });
 
-  const logs = auditQuery.data?.items ?? [];
+  const logs = useMemo(() => auditQuery.data?.items ?? [], [auditQuery.data]);
   const totalLogs = auditQuery.data?.total ?? 0;
   const stats = useMemo(
     () => ({

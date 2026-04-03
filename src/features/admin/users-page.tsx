@@ -75,7 +75,7 @@ export default function UsersPage() {
     enabled: Boolean(accessToken),
   });
 
-  const users = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
+  const users = useMemo(() => (Array.isArray(usersQuery.data) ? usersQuery.data : []), [usersQuery.data]);
 
   const filtered = useMemo(() => {
     let result = users;

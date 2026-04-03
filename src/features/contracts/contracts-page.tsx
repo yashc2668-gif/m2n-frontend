@@ -106,9 +106,9 @@ export default function ContractsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
-  const vendors = vendorsQuery.data ?? EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
+  const vendors = Array.isArray(vendorsQuery.data) ? vendorsQuery.data : EMPTY_LIST;
 
   const projectMap = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),

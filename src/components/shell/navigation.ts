@@ -19,6 +19,7 @@ import {
   Sparkles,
   ScrollText,
   Truck,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
@@ -62,6 +63,13 @@ export const navigationSections: NavigationSection[] = [
     title: "Masters",
     items: [
       {
+        to: "/companies",
+        label: "Companies",
+        description: "Business identity master with GST, PAN, and contacts",
+        icon: Building2,
+        permissions: ["companies:read"],
+      },
+      {
         to: "/projects",
         label: "Projects",
         description: "Project anchor, value, and status control",
@@ -81,6 +89,13 @@ export const navigationSections: NavigationSection[] = [
         description: "Supplier and contractor partner master",
         icon: Truck,
         permissions: ["vendors:read"],
+      },
+      {
+        to: "/quotations",
+        label: "Quotations",
+        description: "Vendor-first quotation register and PDF intake",
+        icon: FileText,
+        permissions: ["documents:read"],
       },
       {
         to: "/boq",
@@ -144,6 +159,13 @@ export const navigationSections: NavigationSection[] = [
         permissions: ["labour:read"],
       },
       {
+        to: "/labour/contractors",
+        label: "Labour Contractors",
+        description: "Gang and labour-supplier master for departmental sheets",
+        icon: HardHat,
+        permissions: ["labour_contractors:read"],
+      },
+      {
         to: "/labour/attendance",
         label: "Attendance",
         description: "Mark muster, submit, and approve labour attendance",
@@ -189,6 +211,13 @@ export const navigationSections: NavigationSection[] = [
         description: "Release posture and RA bill linkage",
         icon: ReceiptText,
         permissions: ["payments:read"],
+      },
+      {
+        to: "/site-expenses",
+        label: "Site Expenses",
+        description: "Petty cash, reimbursement, and local site spend register",
+        icon: WalletCards,
+        permissions: ["site_expenses:read"],
       },
       {
         to: "/measurements",

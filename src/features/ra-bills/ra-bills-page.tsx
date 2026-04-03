@@ -151,9 +151,9 @@ export default function RABillsPage() {
     enabled: Boolean(accessToken),
   });
 
-  const bills = billsQuery.data ?? EMPTY_LIST;
-  const contracts = contractsQuery.data ?? EMPTY_LIST;
-  const projects = projectsQuery.data ?? EMPTY_LIST;
+  const bills = Array.isArray(billsQuery.data) ? billsQuery.data : EMPTY_LIST;
+  const contracts = Array.isArray(contractsQuery.data) ? contractsQuery.data : EMPTY_LIST;
+  const projects = Array.isArray(projectsQuery.data) ? projectsQuery.data : EMPTY_LIST;
   const contractMap = useMemo(
     () =>
       new Map(

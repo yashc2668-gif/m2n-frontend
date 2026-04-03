@@ -3,6 +3,7 @@ import {
   type ReactNode,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -305,7 +306,7 @@ export function DataTable<T>({
     () => new Map(columns.map((column) => [getColumnId(column), column])),
     [columns],
   );
-  useEffect(() => {
+  const syncColumnState = useEffectEvent(() => {
     const nextIds = columns.map(getColumnId);
     setColumnOrder((current) => {
       const filtered = current.filter((id) => nextIds.includes(id));
@@ -342,6 +343,10 @@ export function DataTable<T>({
       });
       return next;
     });
+  });
+
+  useEffect(() => {
+    syncColumnState();
   }, [colMap, columns]);
 
   useEffect(() => {
@@ -435,11 +440,15 @@ export function DataTable<T>({
     ],
   );
 
-  useEffect(() => {
+  const resetClientPage = useEffectEvent(() => {
     if (page !== undefined || paginationMode !== "client") {
       return;
     }
     setInternalPage(1);
+  });
+
+  useEffect(() => {
+    resetClientPage();
   }, [page, pageSize, paginationMode, rows.length]);
 
   const orderedColumns = useMemo(
@@ -488,11 +497,15 @@ export function DataTable<T>({
       ? sortedRows
       : rows;
 
-  useEffect(() => {
+  const clampResolvedPage = useEffectEvent(() => {
     if (safeCurrentPage !== currentPage) {
       setResolvedPage(safeCurrentPage);
     }
-  }, [currentPage, safeCurrentPage, setResolvedPage]);
+  });
+
+  useEffect(() => {
+    clampResolvedPage();
+  }, [currentPage, safeCurrentPage]);
 
   /* ── Sort handler ── */
   const handleSort = useCallback(

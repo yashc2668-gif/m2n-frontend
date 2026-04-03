@@ -1,5 +1,6 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { HardHat, X } from 'lucide-react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import { useAuth } from '@/app/providers/auth-provider';
 import { navigationSections } from '@/components/shell/navigation';
@@ -12,10 +13,71 @@ interface AppSidebarProps {
   onClose: () => void;
 }
 
+const SIDEBAR_SCROLL_STORAGE_KEY = 'm2n:sidebar-scroll-top';
+
 export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { user } = useAuth();
   const currentRole = user?.role ?? 'viewer';
+  const navRef = useRef<HTMLElement | null>(null);
+  const sidebarScrollTopRef = useRef(0);
+  const restoreSidebarScroll = () => {
+    const navElement = navRef.current;
+    if (!navElement) {
+      return;
+    }
+    if (sidebarScrollTopRef.current > 0) {
+      navElement.scrollTop = sidebarScrollTopRef.current;
+      return;
+    }
+    const savedScrollTop = window.sessionStorage.getItem(SIDEBAR_SCROLL_STORAGE_KEY);
+    if (savedScrollTop) {
+      const parsedScrollTop = Number(savedScrollTop);
+      sidebarScrollTopRef.current = parsedScrollTop;
+      navElement.scrollTop = parsedScrollTop;
+    }
+  };
+
+  const persistSidebarScroll = () => {
+    const navElement = navRef.current;
+    if (!navElement) {
+      return;
+    }
+    sidebarScrollTopRef.current = navElement.scrollTop;
+    window.sessionStorage.setItem(
+      SIDEBAR_SCROLL_STORAGE_KEY,
+      String(sidebarScrollTopRef.current),
+    );
+  };
+
+  useEffect(() => {
+    const navElement = navRef.current;
+    if (!navElement) {
+      return;
+    }
+
+    restoreSidebarScroll();
+    navElement.addEventListener('scroll', persistSidebarScroll, { passive: true });
+    return () => {
+      persistSidebarScroll();
+      navElement.removeEventListener('scroll', persistSidebarScroll);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    restoreSidebarScroll();
+    const firstFrame = window.requestAnimationFrame(() => {
+      restoreSidebarScroll();
+    });
+    const secondFrame = window.requestAnimationFrame(() => {
+      restoreSidebarScroll();
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [pathname]);
 
   const filteredSections = navigationSections
     .map((section) => ({
@@ -41,7 +103,7 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
       />
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-[320px] flex-col border-r border-[color:var(--sidebar-line)] bg-[var(--sidebar)] px-5 py-6 text-white shadow-[var(--shadow-xl)] transition lg:static lg:z-auto lg:w-[300px] lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 flex h-screen w-[320px] flex-col overflow-hidden border-r border-[color:var(--sidebar-line)] bg-[var(--sidebar)] px-5 py-6 text-white shadow-[var(--shadow-xl)] transition lg:static lg:z-auto lg:w-[300px] lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -69,7 +131,7 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
           </p>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-6">
+        <nav ref={navRef} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pr-1">
           {filteredSections.map((section) => (
             <div key={section.title} className="space-y-2">
               <p className="px-3 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--sidebar-muted)]">
@@ -82,16 +144,26 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                     : pathname === item.to || pathname.startsWith(`${item.to}/`);
                   const Icon = item.icon;
                   return (
-                    <Link
+                    <button
                       key={item.to}
-                      to={item.to}
+                      type="button"
+                      aria-current={active ? 'page' : undefined}
                       className={cn(
-                        'group flex rounded-[var(--radius)] border px-3 py-3 transition',
+                        'group flex w-full rounded-[var(--radius)] border px-3 py-3 text-left transition',
                         active
                           ? 'border-white/10 bg-white text-[var(--sidebar)]'
                           : 'border-transparent bg-transparent text-white/82 hover:border-white/8 hover:bg-white/6',
                       )}
-                      onClick={onClose}
+                      onPointerDown={(event) => {
+                        event.preventDefault();
+                      }}
+                      onClick={() => {
+                        persistSidebarScroll();
+                        if (pathname !== item.to) {
+                          void navigate({ to: item.to, resetScroll: false });
+                        }
+                        onClose();
+                      }}
                     >
                       <div className="flex items-start gap-3">
                         <span
@@ -109,7 +181,7 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
                           </p>
                         </div>
                       </div>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>

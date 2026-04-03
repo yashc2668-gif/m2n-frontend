@@ -1,4 +1,4 @@
-import { apiFetch } from '@/api/client';
+import { apiFetch, apiFetchList } from '@/api/client';
 import type {
   SecuredAdvance,
   SecuredAdvanceIssueCreateInput,
@@ -7,7 +7,7 @@ import type {
 } from '@/api/types';
 
 export function fetchSecuredAdvances(token: string, filters?: { contract_id?: number }) {
-  return apiFetch<SecuredAdvance[]>('/secured-advances/', {
+  return apiFetchList<SecuredAdvance>('/secured-advances/', {
     token,
     query: { limit: 200, ...filters },
   });
@@ -34,5 +34,5 @@ export function updateSecuredAdvance(token: string, id: number, payload: Secured
 }
 
 export function fetchSecuredAdvanceRecoveries(token: string, id: number) {
-  return apiFetch<SecuredAdvanceRecovery[]>(`/secured-advances/${id}/recoveries`, { token });
+  return apiFetchList<SecuredAdvanceRecovery>(`/secured-advances/${id}/recoveries`, { token });
 }

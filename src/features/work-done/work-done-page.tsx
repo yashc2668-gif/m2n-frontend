@@ -37,8 +37,11 @@ export default function WorkDonePage() {
     enabled: Boolean(accessToken),
   });
 
-  const contracts = useMemo(() => contractsQuery.data ?? [], [contractsQuery.data]);
-  const records = useMemo(() => workDoneQuery.data ?? [], [workDoneQuery.data]);
+  const contracts = useMemo(
+    () => (Array.isArray(contractsQuery.data) ? contractsQuery.data : []),
+    [contractsQuery.data],
+  );
+  const records = useMemo(() => (Array.isArray(workDoneQuery.data) ? workDoneQuery.data : []), [workDoneQuery.data]);
 
   const filtered = useMemo(() => {
     if (!search) return records;

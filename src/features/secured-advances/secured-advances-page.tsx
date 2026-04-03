@@ -64,8 +64,11 @@ export default function SecuredAdvancesPage() {
     enabled: Boolean(accessToken),
   });
 
-  const contracts = useMemo(() => contractsQuery.data ?? [], [contractsQuery.data]);
-  const advances = useMemo(() => advancesQuery.data ?? [], [advancesQuery.data]);
+  const contracts = useMemo(
+    () => (Array.isArray(contractsQuery.data) ? contractsQuery.data : []),
+    [contractsQuery.data],
+  );
+  const advances = useMemo(() => (Array.isArray(advancesQuery.data) ? advancesQuery.data : []), [advancesQuery.data]);
 
   const filtered = useMemo(() => {
     if (!search) return advances;
